@@ -1,15 +1,17 @@
 import { HandThumbUpIcon } from '@heroicons/react/24/solid'
 import { useWallet } from '@makerx/use-wallet'
 import CancelIcon from '@mui/icons-material/Cancel'
-import { Alert, Box, Button, InputAdornment, Link, Skeleton, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Grid, InputAdornment, Link, Skeleton, TextField, Typography } from '@mui/material'
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
+import type { MouseEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import {
   VoteGatingSnapshot,
   VotingRoundMetadata,
   fetchVotingRoundMetadata,
   fetchVotingSnapshot,
+  Question,
 } from '../../../../dapp/src/shared/IPFSGateway'
 import {
   TallyCounts,
@@ -29,6 +31,7 @@ import { VoteResults } from './VoteResults'
 import { VotingInstructions } from './VotingInstructions'
 import VotingStats from './VotingStats'
 import { VotingTime } from './VotingTime'
+import { FilterChip } from '../../shared/Chips'
 
 function Vote() {
   const { voteId: voteIdParam } = useParams()
@@ -87,6 +90,28 @@ function Vote() {
   if (voteIdParam && import.meta.env.VITE_HIDDEN_VOTING_ROUND_IDS?.split(',')?.includes(voteIdParam)) {
     navigate('/')
   }
+
+  /**
+   * Users Current Filter
+   */
+  const [filteredChips, setFilteredChips] = useState<string[]>([])
+
+  /**
+   * Array of all Categories and Focus Areas
+   */
+  const chips = useMemo<string[]>(() => {
+    return typeof votingRoundMetadata?.questions === 'undefined'
+      ? []
+      : votingRoundMetadata.questions.reduce((prev, curr) => {
+          if (typeof curr?.metadata?.focus_area === 'string' && !prev.includes(curr.metadata.focus_area)) {
+            prev.push(curr.metadata.focus_area)
+          }
+          if (typeof curr?.metadata?.category === 'string' && !prev.includes(curr.metadata.category)) {
+            prev.push(curr.metadata.category)
+          }
+          return prev
+        }, [] as string[])
+  }, [votingRoundMetadata])
 
   const updateVoteAllocations = (proposalId: string, amount: number) => {
     const newVoteAllocationsPercentage = { ...voteAllocationsPercentage }
@@ -275,6 +300,35 @@ function Vote() {
     refetchVoteRoundData(voteId)
   }
 
+  /**
+   * Handle Filter Chip Interactions
+   */
+  function handleFilterChipClicked(e: MouseEvent, chip: string) {
+    // Remove Filter
+    if (filteredChips.includes(chip)) {
+      // Clone the current state to make it mutable
+      const clonedChips = [...filteredChips]
+      clonedChips.splice(clonedChips.indexOf(chip), 1)
+      setFilteredChips(clonedChips)
+    }
+    // Add Filter
+    else {
+      setFilteredChips([...filteredChips, chip])
+    }
+  }
+  function handleFilterClearClicked() {
+    setFilteredChips([])
+  }
+  /**
+   * Filter Questions based on current state
+   */
+  function filterQuestions(q: Question) {
+    if (typeof q?.metadata?.focus_area !== 'string' || typeof q?.metadata?.category !== 'string') {
+      throw new TypeError('Invalid metadata')
+    }
+    return filteredChips.length === 0 || filteredChips.includes(q.metadata.focus_area) || filteredChips.includes(q.metadata.category)
+  }
+
   if (hasClosed && votingRoundGlobalState) {
     return (
       <VoteResults
@@ -305,7 +359,31 @@ function Vote() {
         {isLoadingVotingRoundData ? (
           <Skeleton className="h-12 w-1/2" variant="text" />
         ) : (
-          <Typography variant="h3">{votingRoundMetadata?.title}</Typography>
+          <Grid container>
+            <Grid item md>
+              <Typography variant="h3">{votingRoundMetadata?.title}</Typography>
+            </Grid>
+            <Grid item>
+              <Grid container>
+                <Grid item>
+                  <Typography variant="h6">Filter</Typography>
+                </Grid>
+                <Grid item>
+                  <Button variant="contained" onClick={handleFilterClearClicked}>
+                    Clear
+                  </Button>
+                </Grid>
+              </Grid>
+              {chips.map((chip) => (
+                <FilterChip
+                  color={filteredChips.includes(chip) ? 'error' : 'success'}
+                  // variant={filteredChips.includes(chip) ? 'outlined' : 'filled'}
+                  label={chip}
+                  onClick={(e) => handleFilterChipClicked(e, chip)}
+                />
+              ))}
+            </Grid>
+          </Grid>
         )}
         {votingRoundMetadata?.description && <Typography>{votingRoundMetadata.description}</Typography>}
         {votingRoundMetadata?.informationUrl && (
@@ -350,49 +428,51 @@ function Vote() {
                 <Skeleton className="h-40" variant="rectangular" />
               </div>
             )}
-            {votingRoundMetadata?.questions.map((question, index) => (
-              <div key={index} className="col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-4 bg-white rounded-lg">
-                <div className="col-span-2">
-                  {question.metadata && (
-                    <ProposalCard
-                      title={question.prompt}
-                      description={question.description}
-                      category={question.metadata.category}
-                      focus_area={question.metadata.focus_area}
-                      link={question.metadata.link}
-                      threshold={question.metadata.threshold}
-                      ask={question.metadata.ask}
-                      votesTally={votingRoundResults && votingRoundResults[index] ? votingRoundResults[index].count : 0}
-                    />
-                  )}
-                </div>
-                <div className="flex items-center col-span-1 bg-gray-100 m-3">
-                  {canVote && !hasVoted && (
-                    <>
-                      <TextField
-                        type="number"
-                        className="w-32 bg-white m-4 rounded-xl"
-                        disabled={totalAllocatedPercentage === 100 && !voteAllocationsPercentage[question.id]}
-                        InputProps={{
-                          inputProps: {
-                            max: 100 - totalAllocatedPercentage + voteAllocationsPercentage[question.id],
-                            min: 0,
-                          },
-                          endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                        }}
-                        id={question.id}
-                        variant="outlined"
-                        onChange={(e) => {
-                          updateVoteAllocations(question.id, parseFloat(e.target.value))
-                        }}
-                        value={voteAllocationsPercentage[question.id] ? `${voteAllocationsPercentage[question.id]}` : 0}
+            {votingRoundMetadata?.questions
+              .filter((q) => filterQuestions(q))
+              .map((question, index) => (
+                <div key={index} className="col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-4 bg-white rounded-lg">
+                  <div className="col-span-2">
+                    {question.metadata && (
+                      <ProposalCard
+                        title={question.prompt}
+                        description={question.description}
+                        category={question.metadata.category}
+                        focus_area={question.metadata.focus_area}
+                        link={question.metadata.link}
+                        threshold={question.metadata.threshold}
+                        ask={question.metadata.ask}
+                        votesTally={votingRoundResults && votingRoundResults[index] ? votingRoundResults[index].count : 0}
                       />
-                      <small>&nbsp;&nbsp; ~{voteAllocations[question.id] ? voteAllocations[question.id] : 0} votes</small>
-                    </>
-                  )}
+                    )}
+                  </div>
+                  <div className="flex items-center col-span-1 bg-gray-100 m-3">
+                    {canVote && !hasVoted && (
+                      <>
+                        <TextField
+                          type="number"
+                          className="w-32 bg-white m-4 rounded-xl"
+                          disabled={totalAllocatedPercentage === 100 && !voteAllocationsPercentage[question.id]}
+                          InputProps={{
+                            inputProps: {
+                              max: 100 - totalAllocatedPercentage + voteAllocationsPercentage[question.id],
+                              min: 0,
+                            },
+                            endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                          }}
+                          id={question.id}
+                          variant="outlined"
+                          onChange={(e) => {
+                            updateVoteAllocations(question.id, parseFloat(e.target.value))
+                          }}
+                          value={voteAllocationsPercentage[question.id] ? `${voteAllocationsPercentage[question.id]}` : 0}
+                        />
+                        <small>&nbsp;&nbsp; ~{voteAllocations[question.id] ? voteAllocations[question.id] : 0} votes</small>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
