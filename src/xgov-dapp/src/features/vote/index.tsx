@@ -91,6 +91,8 @@ function Vote() {
     navigate('/')
   }
 
+  const [sort, setSort] = useState<'ascending' | 'descending'>('descending')
+
   /**
    * Users Current Filter
    */
@@ -319,6 +321,13 @@ function Vote() {
   function handleFilterClearClicked() {
     setFilteredChips([])
   }
+  function handleSortToggle() {
+    if (sort === 'ascending') {
+      setSort('descending')
+    } else {
+      setSort('ascending')
+    }
+  }
   /**
    * Filter Questions based on current state
    */
@@ -327,6 +336,14 @@ function Vote() {
       throw new TypeError('Invalid metadata')
     }
     return filteredChips.length === 0 || filteredChips.includes(q.metadata.focus_area) || filteredChips.includes(q.metadata.category)
+  }
+
+  function sortQuestions(a: Question, b: Question) {
+    if (typeof a?.metadata?.ask !== 'number' || typeof b?.metadata?.ask !== 'number') {
+      throw new TypeError('Invalid Metadata')
+    }
+    const isSorted = sort === 'ascending' ? a.metadata.ask < b.metadata.ask : a.metadata.ask > b.metadata.ask
+    return isSorted ? -1 : 0
   }
 
   if (hasClosed && votingRoundGlobalState) {
@@ -369,6 +386,9 @@ function Vote() {
                   <Typography variant="h6">Filter</Typography>
                 </Grid>
                 <Grid item>
+                  <Button variant="contained" onClick={handleSortToggle} color="secondary">
+                    {sort === 'ascending' ? 'isUp' : 'isDown'}
+                  </Button>
                   <Button variant="contained" onClick={handleFilterClearClicked}>
                     Clear
                   </Button>
@@ -429,7 +449,8 @@ function Vote() {
               </div>
             )}
             {votingRoundMetadata?.questions
-              .filter((q) => filterQuestions(q))
+              .filter(filterQuestions)
+              .sort(sortQuestions)
               .map((question, index) => (
                 <div key={index} className="col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-4 bg-white rounded-lg">
                   <div className="col-span-2">
