@@ -42,7 +42,7 @@ export const ProposalCard = ({
         </div>
 
         <Typography className="mt-3 mb-3" variant="h5">
-          {title}
+          {title}-Amazing
         </Typography>
         <div className="flex justify-between">
           <Typography className="mb-2" variant="h6">
@@ -82,7 +82,7 @@ export const ProposalCard = ({
       </div>
 
       <Typography className="mt-3 mb-3" variant="h5">
-        {title}
+        {title}-Amazing
       </Typography>
       <div className="flex justify-between">
         <Typography className="mb-2" variant="h6">
