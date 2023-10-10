@@ -1,9 +1,7 @@
-import 'tailwindcss/tailwind.css'
 import '../src/main.css'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { withThemeFromJSXProvider } from '@storybook/addon-themes'
 import { lightTheme, darkTheme } from '../src/themes'
-import { withRouter, reactRouterParameters } from 'storybook-addon-react-router-v6'
 import type { Preview } from '@storybook/react'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { WalletProvider } from '@makerx/use-wallet'
@@ -11,8 +9,11 @@ import { LocalizationProvider } from '@mui/x-date-pickers'
 import { useAlgoWallet } from '../src/utils/useAlgoWalletProvider'
 import { RecoilRoot } from 'recoil'
 import { MemoryRouter } from "react-router";
+import * as React from 'react'
+
 const preview: Preview = {
   parameters: {
+    layout: 'fullscreen',
     actions: { argTypesRegex: '^on[A-Z].*' },
     controls: {
       matchers: {
@@ -23,6 +24,7 @@ const preview: Preview = {
   }
 }
 
+// TODO: Create Providers.tsx
 export const decorators = [
   (Story) => {
     const walletProviders = useAlgoWallet({
@@ -33,6 +35,7 @@ export const decorators = [
       autoConnect: true,
     })
     return (
+      <div id="root" className="h-fit">
       <MemoryRouter>
         <RecoilRoot>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -42,6 +45,7 @@ export const decorators = [
           </LocalizationProvider>
         </RecoilRoot>
       </MemoryRouter>
+      </div>
     )
   },
   withThemeFromJSXProvider({
