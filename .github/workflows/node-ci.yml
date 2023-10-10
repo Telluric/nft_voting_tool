@@ -103,4 +103,5 @@ jobs:
         if:  ${{ inputs.run-dispatch }}
         uses: chromaui/action@v1
         with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }} }}
+          workingDir: ${{ inputs.working-directory }}
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
