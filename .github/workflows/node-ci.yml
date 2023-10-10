@@ -45,6 +45,9 @@ on:
         type: boolean
         default: false
     secrets:
+      chromatic-token:
+        description: Chromatic project token
+        required: false
       npm-auth-token:
         description: NPM auth token (optional, GITHUB_TOKEN is used by default)
         required: false
