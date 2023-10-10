@@ -53,7 +53,8 @@ on:
 jobs:
   node-ci:
     runs-on: ubuntu-latest
-
+    env:
+      CHROMATIC: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     defaults:
       run:
         shell: bash
@@ -102,7 +103,7 @@ jobs:
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
         env:
-          TEST_ENV: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          CHROMATIC_TEST_ENV: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Dispatch
         if:  ${{ inputs.run-dispatch }}
         uses: chromaui/action@v1
