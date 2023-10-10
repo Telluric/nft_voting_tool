@@ -100,6 +100,9 @@ jobs:
         # CDK infrastructure build calls npm ci on /infrastructure/build, which may fail without NODE_AUTH_TOKEN
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
+      - name: Copy .env
+        if: ${{ inputs.run-dispatch }}
+        run: cp ${{inputs.working.directory}}.env.template ${{inputs.working.directory}}.env
       - name: Dispatch
         if:  ${{ inputs.run-dispatch }}
         uses: chromaui/action@v1
