@@ -5,7 +5,7 @@ export default {
   render: (args: ProposalCardProps) => (
     <div className="grid grid-cols-1 gap-4">
       <div>
-      <Card {...args} />
+        <Card {...args} />
       </div>
     </div>
   ),
