@@ -102,4 +102,4 @@ jobs:
         uses: chromaui/action@v1
         with:
           workingDir: ${{ inputs.working-directory }}
-          projectToken: ${{ inputs.chromatic-token }}
+          projectToken: ${{ secrets.chromatic-token }}
