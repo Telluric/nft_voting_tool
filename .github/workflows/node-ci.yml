@@ -102,3 +102,5 @@ jobs:
       - name: Dispatch
         if:  ${{ inputs.run-dispatch }}
         run: ${{ inputs.dispatch-script }}
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
