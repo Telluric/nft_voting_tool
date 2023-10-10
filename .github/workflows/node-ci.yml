@@ -37,10 +37,9 @@ on:
       pre-run-script:
         required: false
         type: string
-      dispatch-script:
+      chromatic-token:
         required: false
         type: string
-        default: npm run chromatic
       run-dispatch:
         required: false
         type: boolean
@@ -53,8 +52,6 @@ on:
 jobs:
   node-ci:
     runs-on: ubuntu-latest
-    env:
-      CHROMATIC: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     defaults:
       run:
         shell: bash
@@ -100,13 +97,9 @@ jobs:
         # CDK infrastructure build calls npm ci on /infrastructure/build, which may fail without NODE_AUTH_TOKEN
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-        env:
-          CHROMATIC_TEST_ENV: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Dispatch
         if:  ${{ inputs.run-dispatch }}
         uses: chromaui/action@v1
         with:
           workingDir: ${{ inputs.working-directory }}
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          projectToken: ${{ inputs.chromatic-token }}
