@@ -99,6 +99,10 @@ jobs:
         # CDK infrastructure build calls npm ci on /infrastructure/build, which may fail without NODE_AUTH_TOKEN
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+        env:
+          TEST_ENV: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Dispatch
         if:  ${{ inputs.run-dispatch }}
         uses: chromaui/action@v1
