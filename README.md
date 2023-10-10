@@ -1,5 +1,7 @@
 # On-chain Voting Tool
 
+Test
+
 This repository contains a voting tool that allows for creation and facilitation of immutable, tamperproof voting using the Algorand blockchain.
 
 ## Background
