@@ -101,6 +101,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       - name: Dispatch
         if:  ${{ inputs.run-dispatch }}
-        run: ${{ inputs.dispatch-script }}
-        env:
-          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        uses: chromaui/action@v1
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }} }}
